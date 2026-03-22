@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz des Drapeaux — Mode Rogue</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/rogue.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Quiz des Drapeaux</h1>
+    <p>Mode Rogue — survivez aux 3 actes</p>
+  </header>
+
+  <!-- ACT TRANSITION -->
+  <div class="act-screen" id="actScreen">
+    <h2 id="actTitle">Acte I</h2>
+    <p id="actSubtitle">Les drapeaux les plus célèbres</p>
+    <button class="act-start-btn" onclick="dismissActScreen()">Commencer →</button>
+  </div>
+
+  <!-- CARD CHOICE -->
+  <div class="card-choice-screen" id="cardChoiceScreen">
+    <h2>Choisissez un bonus</h2>
+    <p>Ce bonus sera actif pour le reste de la run</p>
+    <div class="card-choices" id="cardChoices"></div>
+  </div>
+
+  <!-- MAIN GAME -->
+  <div class="game-zone" id="rogueGame" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="rogueProgress" style="width:0%"></div></div>
+
+    <div class="rogue-status">
+      <div>
+        <div class="rogue-act" id="actDisplay">Acte 1</div>
+        <div class="rogue-round" id="roundDisplay">Round 1 / 4</div>
+      </div>
+      <div class="rogue-lives" id="livesDisplay">❤️❤️❤️</div>
+    </div>
+
+    <div class="active-cards-row" id="activeCardsDisplay"></div>
+
+    <div class="card" id="rogueCard">
+      <div class="flag-container"><img id="rogueFlag" src="" alt="Drapeau"></div>
+      <div class="rogue-flag-count" id="rogueFlagCount">1 / 5</div>
+      <div class="rogue-continent-hint" id="rogueContinentHint"></div>
+      <div class="rogue-letter-hint" id="rogueLetterHint"></div>
+      <div class="input-row">
+        <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off">
+        <button id="rogueSubmitBtn" onclick="checkRogueAnswer()">Valider</button>
+      </div>
+      <div class="feedback" id="rogueFeedback">
+        <div class="result-text" id="rogueResultText"></div>
+        <div class="answer-reveal" id="rogueAnswerReveal"></div>
+      </div>
+      <button class="next-btn" id="rogueNextBtn" onclick="nextRogueFlag()">Suivant →</button>
+      <div class="next-hint" id="rogueNextHint">Entrée ou Espace pour continuer</div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="rogue-end" id="rogueEnd">
+    <h2 id="rogueEndTitle">Game Over</h2>
+    <div class="rogue-end-score" id="rogueEndScore"></div>
+    <p class="rogue-end-detail" id="rogueEndDetail"></p>
+    <div class="recap-title">Récapitulatif</div>
+    <div class="recap-grid" id="rogueRecapGrid"></div>
+    <button class="restart-btn" onclick="startRun()">Nouvelle run</button>
+    <br>
+    <a href="index.html" class="back-menu-btn">← Accueil</a>
+  </div>
+</div>
+<script src="data/countries.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/rogue.js"></script>
+</body>
+</html>
