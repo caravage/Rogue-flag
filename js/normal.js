@@ -36,6 +36,8 @@ function buildMenu() {
   grid.innerHTML = '';
   CATEGORIES.forEach((cat, i) => {
     const count = cat.filter().length;
+    const hasSub = cat.sub && cat.sub.length > 0;
+
     const btn = document.createElement('div');
     btn.className = 'cat-btn fade-in';
     btn.style.animationDelay = (i * 0.06) + 's';
@@ -45,9 +47,41 @@ function buildMenu() {
         <div class="cat-name">${cat.name}</div>
         <div class="cat-count">${count} pays</div>
       </div>
-      <div class="cat-arrow">→</div>`;
-    btn.onclick = () => startGame(cat.id);
-    grid.appendChild(btn);
+      <div class="cat-arrow">${hasSub ? '▼' : '→'}</div>`;
+
+    if (hasSub) {
+      // Create sub-menu container
+      const subGrid = document.createElement('div');
+      subGrid.className = 'sub-grid';
+      subGrid.style.display = 'none';
+
+      cat.sub.forEach(sub => {
+        const subCount = sub.filter().length;
+        const subBtn = document.createElement('div');
+        subBtn.className = 'cat-btn cat-btn-sub fade-in';
+        subBtn.innerHTML = `
+          ${sub.icon ? '<div class="cat-icon">' + sub.icon + '</div>' : ''}
+          <div class="cat-info">
+            <div class="cat-name">${sub.name}</div>
+            <div class="cat-count">${subCount} pays</div>
+          </div>
+          <div class="cat-arrow">→</div>`;
+        subBtn.onclick = (e) => { e.stopPropagation(); startGame(sub.id); };
+        subGrid.appendChild(subBtn);
+      });
+
+      btn.onclick = () => {
+        const visible = subGrid.style.display !== 'none';
+        subGrid.style.display = visible ? 'none' : 'flex';
+        btn.querySelector('.cat-arrow').textContent = visible ? '▼' : '▲';
+      };
+
+      grid.appendChild(btn);
+      grid.appendChild(subGrid);
+    } else {
+      btn.onclick = () => startGame(cat.id);
+      grid.appendChild(btn);
+    }
   });
 }
 
@@ -57,9 +91,21 @@ function showMenu() {
   buildMenu();
 }
 
+function findCategory(catId) {
+  for (const cat of CATEGORIES) {
+    if (cat.id === catId) return cat;
+    if (cat.sub) {
+      const sub = cat.sub.find(s => s.id === catId);
+      if (sub) return sub;
+    }
+  }
+  return null;
+}
+
 function startGame(catId) {
   currentCategory = catId;
-  const cat = CATEGORIES.find(c => c.id === catId);
+  const cat = findCategory(catId);
+  if (!cat) return;
   const pool = cat.filter();
   totalQuestions = Math.min(20, pool.length);
   questions = shuffle(pool).slice(0, totalQuestions);
@@ -198,5 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!answered) return;
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextQuestion(); }
   });
+  initMobileScrollFix();
   showMenu();
 });
