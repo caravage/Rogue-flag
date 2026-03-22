@@ -24,9 +24,20 @@
 
   <!-- CARD CHOICE -->
   <div class="card-choice-screen" id="cardChoiceScreen">
-    <h2>Choisissez un bonus</h2>
-    <p>Ce bonus sera actif pour le reste de la run</p>
+    <h2>Choisissez une récompense</h2>
+    <p>Sélectionnez un bonus pour la suite de votre run</p>
     <div class="card-choices" id="cardChoices"></div>
+  </div>
+
+  <!-- CONFIRMATION MODAL -->
+  <div class="confirm-overlay" id="confirmOverlay" style="display:none">
+    <div class="confirm-box">
+      <p id="confirmMessage"></p>
+      <div class="confirm-buttons">
+        <button class="confirm-yes" onclick="confirmYes()">Oui</button>
+        <button class="confirm-no" onclick="confirmNo()">Non</button>
+      </div>
+    </div>
   </div>
 
   <!-- MAIN GAME -->
@@ -49,7 +60,7 @@
       <div class="rogue-continent-hint" id="rogueContinentHint"></div>
       <div class="rogue-letter-hint" id="rogueLetterHint"></div>
       <div class="input-row">
-        <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off">
+        <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" data-lpignore="true" data-form-type="other" name="flag-answer-rogue">
         <button id="rogueSubmitBtn" onclick="checkRogueAnswer()">Valider</button>
       </div>
       <div class="feedback" id="rogueFeedback">
