@@ -55,34 +55,44 @@
       <div class="score-display">⭐ <span id="rogueScore">0</span></div>
     </div>
 
-    <div class="rogue-status">
-      <div>
-        <div class="rogue-act" id="actDisplay">Acte 1</div>
-        <div class="rogue-round" id="roundDisplay">Round 1 / 4</div>
-      </div>
-      <div class="act-dots" id="actDots"></div>
-      <div class="rogue-lives" id="livesDisplay">❤️❤️❤️</div>
-    </div>
+    <div class="rogue-layout">
+      <!-- Vertical act tracker on the left -->
+      <div class="act-tracker" id="actTracker"></div>
 
-    <div class="active-cards-row" id="activeCardsDisplay"></div>
+      <!-- Main game column -->
+      <div class="rogue-main">
+        <div class="rogue-status">
+          <div>
+            <div class="rogue-act" id="actDisplay">Acte 1</div>
+            <div class="rogue-round" id="roundDisplay">Round 1 / 4</div>
+          </div>
+          <div class="rogue-lives" id="livesDisplay">❤️❤️❤️</div>
+        </div>
 
-    <div class="card" id="rogueCard">
-      <div class="boss-label" id="bossLabel" style="display:none"></div>
-      <div class="flag-container"><img id="rogueFlag" src="" alt="Drapeau"></div>
-      <div class="flag-dots-row" id="rogueFlagDots"></div>
-      <div class="rogue-continent-hint" id="rogueContinentHint"></div>
-      <div class="rogue-letter-hint" id="rogueLetterHint"></div>
-      <div class="qcm-overlay" id="qcmOverlay" style="display:none"></div>
-      <div class="input-row">
-        <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" data-lpignore="true" data-form-type="other" name="flag-answer-rogue">
-        <button id="rogueSubmitBtn" onclick="checkRogueAnswer()">Valider</button>
+        <div class="active-cards-row" id="activeCardsDisplay"></div>
+
+        <div class="card" id="rogueCard">
+          <div class="boss-label" id="bossLabel" style="display:none"></div>
+          <div class="flag-container"><img id="rogueFlag" src="" alt="Drapeau"></div>
+          <div class="flag-dots-row" id="rogueFlagDots"></div>
+          <div class="rogue-continent-hint" id="rogueContinentHint"></div>
+          <div class="rogue-letter-hint" id="rogueLetterHint"></div>
+          <div class="qcm-overlay" id="qcmOverlay" style="display:none"></div>
+          <div class="input-row">
+            <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" data-lpignore="true" data-form-type="other" name="flag-answer-rogue">
+            <button id="rogueSubmitBtn" onclick="checkRogueAnswer()">Valider</button>
+          </div>
+          <div class="action-row" id="rogueActionRow">
+            <button class="skip-btn" id="roguePassBtn" onclick="roguePass()">Passer (-1❤️)</button>
+          </div>
+          <div class="feedback" id="rogueFeedback">
+            <div class="result-text" id="rogueResultText"></div>
+            <div class="answer-reveal" id="rogueAnswerReveal"></div>
+          </div>
+          <button class="next-btn" id="rogueNextBtn" onclick="nextRogueFlag()">Suivant →</button>
+          <div class="next-hint" id="rogueNextHint">Entrée ou Espace pour continuer</div>
+        </div>
       </div>
-      <div class="feedback" id="rogueFeedback">
-        <div class="result-text" id="rogueResultText"></div>
-        <div class="answer-reveal" id="rogueAnswerReveal"></div>
-      </div>
-      <button class="next-btn" id="rogueNextBtn" onclick="nextRogueFlag()">Suivant →</button>
-      <div class="next-hint" id="rogueNextHint">Entrée ou Espace pour continuer</div>
     </div>
   </div>
 
