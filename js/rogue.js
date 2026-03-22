@@ -118,19 +118,33 @@ function updateActRoundDisplay() {
 }
 
 function updateActDots() {
+  const el = $('actTracker');
   let html = '';
-  for (let r = 1; r <= ROUNDS_PER_ACT; r++) {
-    let cls = 'act-dot';
-    if (r < round) cls += ' act-dot-done';
-    else if (r === round && !inBoss) cls += ' act-dot-current';
-    html += `<span class="${cls}"></span>`;
+  
+  // Boss at top
+  let bossCls = 'tracker-node tracker-boss';
+  if (inBoss) bossCls += ' tracker-current';
+  else if (round > ROUNDS_PER_ACT) bossCls += ' tracker-done';
+  html += `<div class="${bossCls}"><span class="tracker-icon">💀</span><span class="tracker-label">Boss</span></div>`;
+  html += '<div class="tracker-line"></div>';
+
+  // Rounds from top (4) to bottom (1)
+  for (let r = ROUNDS_PER_ACT; r >= 1; r--) {
+    let cls = 'tracker-node';
+    if (r < round || (r === round && inBoss)) cls += ' tracker-done';
+    else if (r === round && !inBoss) cls += ' tracker-current';
+    
+    // Show reward icon between rounds
+    let rewardIcon = '';
+    if (r < round || (r === round && inBoss)) {
+      rewardIcon = r % 2 === 1 ? '🎁' : '🃏';
+    }
+    
+    html += `<div class="${cls}"><span class="tracker-dot"></span><span class="tracker-label">R${r}</span></div>`;
+    if (r > 1) html += '<div class="tracker-line"></div>';
   }
-  // Boss dot
-  let bossCls = 'act-dot act-dot-boss';
-  if (inBoss) bossCls += ' act-dot-current';
-  else if (round > ROUNDS_PER_ACT) bossCls += ' act-dot-done';
-  html += `<span class="${bossCls}">💀</span>`;
-  $('actDots').innerHTML = html;
+
+  el.innerHTML = html;
 }
 
 function updateRogueProgress() {
@@ -467,6 +481,8 @@ function loadRogueFlag() {
   }
 
   $('rogueLetterHint').style.display = 'none';
+  $('roguePassBtn').style.display = '';
+  $('rogueActionRow').style.display = '';
   renderInventory();
   $('rogueInput').focus();
 }
@@ -514,6 +530,7 @@ function checkRogueAnswer() {
   $('rogueFeedback').classList.add('visible');
   $('rogueNextBtn').style.display = 'block';
   $('rogueNextHint').style.display = 'block';
+  $('roguePassBtn').style.display = 'none';
   updateLivesDisplay();
   updateScore();
   updateFlagDots();
@@ -650,6 +667,44 @@ function nextTimeTravelFlag() {
   } else {
     loadTimeTravelFlag();
   }
+}
+
+// ===== PASS (lose a life) =====
+
+function roguePass() {
+  if (answered) return;
+  const q = roundFlags[flagIndex];
+
+  answered = true;
+  lives--;
+  totalWrong++;
+  roundResults.push('ko');
+
+  history.push({ code: q.code, name: cap(q.names[0]), status: 'ko', userAnswer: '⏭ Passé' });
+
+  // Second wind check
+  if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) {
+    secondWindUsed = true;
+    lives = 1;
+    $('rogueResultText').textContent = '💨 Second souffle ! Revenez à 1 vie !';
+  } else {
+    $('rogueResultText').textContent = 'Passé ! -1 ❤️';
+  }
+  $('rogueResultText').className = 'result-text wrong';
+  $('rogueAnswerReveal').textContent = 'Réponse : ' + cap(q.names[0]);
+  $('rogueCard').classList.add('fail', 'shake');
+  $('rogueFeedback').classList.add('visible');
+  $('rogueInput').disabled = true;
+  $('rogueSubmitBtn').disabled = true;
+  $('roguePassBtn').style.display = 'none';
+  $('rogueNextBtn').style.display = 'block';
+  $('rogueNextHint').style.display = 'block';
+  updateLivesDisplay();
+  updateFlagDots();
+  renderInventory();
+  setTimeout(() => $('rogueCard').classList.remove('shake'), 500);
+
+  if (lives <= 0) { setTimeout(() => gameOver(), 800); }
 }
 
 // ===== GOD MODE =====
