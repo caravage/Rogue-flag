@@ -127,10 +127,22 @@
     <a href="index.html" class="back-menu-btn">← Accueil</a>
   </div>
 
-  <!-- GOD MODE -->
-  <button class="god-mode-btn" onclick="godModeAddLife()" title="God Mode: +1 vie">🔧</button>
+  <!-- GOD MODE PANEL -->
+  <button class="god-mode-btn" onclick="toggleGodPanel()" title="God Mode">🔧</button>
+  <div class="god-panel" id="godPanel" style="display:none">
+    <div class="god-panel-title">God Mode</div>
+    <button class="god-panel-btn" onclick="godModeAddLife()">❤️ +1 Vie</button>
+    <div class="god-panel-sep">Affronter un boss :</div>
+    <button class="god-panel-btn" onclick="godModeBoss('mirror')">🪞 Miroir</button>
+    <button class="god-panel-btn" onclick="godModeBoss('flip')">🙃 Renversé</button>
+    <button class="god-panel-btn" onclick="godModeBoss('negative')">🌑 Négatif</button>
+    <button class="god-panel-btn" onclick="godModeBoss('zoom')">🔍 Zoom</button>
+    <button class="god-panel-btn" onclick="godModeBoss('pixel')">📦 Pixelisé</button>
+    <button class="god-panel-btn" onclick="godModeBoss('memory')">🧠 Mémoire</button>
+  </div>
 </div>
 <script src="data/countries.js"></script>
+<script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/rogue.js"></script>
 </body>
