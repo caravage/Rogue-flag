@@ -22,7 +22,15 @@
     <button class="act-start-btn" onclick="dismissActScreen()">Commencer →</button>
   </div>
 
-  <!-- CARD CHOICE -->
+  <!-- BOSS INTRO -->
+  <div class="act-screen" id="bossIntro" style="display:none">
+    <div id="bossIntroIcon" style="font-size:3rem;margin-bottom:12px"></div>
+    <h2 id="bossIntroName">Boss</h2>
+    <p id="bossIntroDesc">Description</p>
+    <button class="act-start-btn" onclick="dismissBossIntro()">Affronter le boss →</button>
+  </div>
+
+  <!-- REWARD CHOICE -->
   <div class="card-choice-screen" id="cardChoiceScreen">
     <h2>Choisissez une récompense</h2>
     <p>Sélectionnez un bonus pour la suite de votre run</p>
@@ -42,7 +50,10 @@
 
   <!-- MAIN GAME -->
   <div class="game-zone" id="rogueGame" style="display:none">
-    <div class="progress-track"><div class="progress-fill" id="rogueProgress" style="width:0%"></div></div>
+    <div class="progress-row">
+      <div class="progress-track" style="flex:1"><div class="progress-fill" id="rogueProgress" style="width:0%"></div></div>
+      <div class="score-display">⭐ <span id="rogueScore">0</span></div>
+    </div>
 
     <div class="rogue-status">
       <div>
@@ -56,10 +67,12 @@
     <div class="active-cards-row" id="activeCardsDisplay"></div>
 
     <div class="card" id="rogueCard">
+      <div class="boss-label" id="bossLabel" style="display:none"></div>
       <div class="flag-container"><img id="rogueFlag" src="" alt="Drapeau"></div>
-      <div class="rogue-flag-count" id="rogueFlagCount">1 / 5</div>
+      <div class="flag-dots-row" id="rogueFlagDots"></div>
       <div class="rogue-continent-hint" id="rogueContinentHint"></div>
       <div class="rogue-letter-hint" id="rogueLetterHint"></div>
+      <div class="qcm-overlay" id="qcmOverlay" style="display:none"></div>
       <div class="input-row">
         <input type="text" id="rogueInput" placeholder="Nom du pays..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" data-lpignore="true" data-form-type="other" name="flag-answer-rogue">
         <button id="rogueSubmitBtn" onclick="checkRogueAnswer()">Valider</button>
@@ -73,7 +86,7 @@
     </div>
   </div>
 
-  <!-- TIME TRAVEL MINI-GAME -->
+  <!-- TIME TRAVEL -->
   <div class="time-travel-screen" id="timeTravelScreen" style="display:none">
     <h2>⏳ Voyage temporel</h2>
     <p>Répondez à 2 drapeaux faciles pour passer le drapeau actuel</p>
