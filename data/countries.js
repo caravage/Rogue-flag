@@ -17,7 +17,12 @@ const COUNTRIES = [
 ];
 
 const CATEGORIES = [
-  {id:"all",name:"Tous les pays",icon:"🌍",filter:()=>COUNTRIES},
+  {id:"all",name:"Tous les pays",icon:"🌍",filter:()=>COUNTRIES,sub:[
+    {id:"all_easy",name:"Facile",icon:"",filter:()=>COUNTRIES.filter(c=>c.tier===1)},
+    {id:"all_medium",name:"Moyen",icon:"",filter:()=>COUNTRIES.filter(c=>c.tier===2)},
+    {id:"all_hard",name:"Difficile",icon:"",filter:()=>COUNTRIES.filter(c=>c.tier===3)},
+    {id:"all_random",name:"Random",icon:"",filter:()=>COUNTRIES},
+  ]},
   {id:"europe",name:"Europe",icon:"🇪🇺",filter:()=>COUNTRIES.filter(c=>c.c==="europe")},
   {id:"asie",name:"Asie",icon:"🌏",filter:()=>COUNTRIES.filter(c=>c.c==="asie")},
   {id:"afrique",name:"Afrique",icon:"🌍",filter:()=>COUNTRIES.filter(c=>c.c==="afrique")},
