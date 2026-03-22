@@ -34,4 +34,10 @@ const CONFIG = {
   // Time travel
   TIME_TRAVEL_FLAGS: 2,
   TIME_TRAVEL_REQUIRED_CORRECT: 2,
+
+  // Timer per flag (ms)
+  FLAG_TIMER_MS: 10000,
+
+  // Historical boss
+  HISTORICAL_BOSS_FLAGS: 3,
 };
