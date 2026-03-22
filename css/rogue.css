@@ -124,6 +124,32 @@
 .boss-mirror:hover { transform: scaleX(-1) scale(1.03) !important; }
 .boss-flip:hover { transform: scaleY(-1) scale(1.03) !important; }
 .boss-negative:hover { filter: invert(1) !important; transform: scale(1.03) !important; }
+/* zoom, pixel, memory are handled dynamically in JS */
+
+/* ===== God mode panel ===== */
+.god-panel {
+  position: fixed; bottom: 50px; left: 16px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 12px; padding: 14px; z-index: 101;
+  display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  min-width: 160px;
+}
+.god-panel-title {
+  font-family: 'DM Serif Display', serif; font-size: 0.9rem;
+  color: var(--accent); margin-bottom: 4px; text-align: center;
+}
+.god-panel-sep {
+  font-size: 0.7rem; color: var(--text-dim); margin-top: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.god-panel-btn {
+  background: var(--bg); border: 1px solid var(--card-border); border-radius: 8px;
+  padding: 6px 10px; color: var(--text); font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem; cursor: pointer; text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.god-panel-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
 
 /* ===== QCM overlay ===== */
 .qcm-overlay { margin: 12px 0; }
