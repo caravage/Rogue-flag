@@ -77,23 +77,29 @@ function getPool(tierNum) {
 
 function generateRoundFlags() {
   const count = MIN_FLAGS + Math.floor(Math.random() * (MAX_FLAGS - MIN_FLAGS + 1));
-  // Act determines main tier, but mix in some from adjacent
-  let pool = [];
-  if (act === 1) {
-    pool = [...getPool(1), ...getPool(2).slice(0, 5)];
-  } else if (act === 2) {
-    pool = [...getPool(2), ...getPool(1).slice(0, 3), ...getPool(3).slice(0, 3)];
-  } else {
-    pool = [...getPool(3), ...getPool(2).slice(0, 5)];
+  let picked = [];
+
+  // Priorité par acte : on pioche d'abord dans le tier principal,
+  // puis on complète avec le tier adjacent si pas assez
+  const tierOrder = act === 1 ? [1, 2, 3] : act === 2 ? [2, 1, 3] : [3, 2, 1];
+
+  for (const tier of tierOrder) {
+    if (picked.length >= count) break;
+    const available = shuffle(getPool(tier)).filter(c => !picked.find(p => p.code === c.code));
+    const need = count - picked.length;
+    picked = [...picked, ...available.slice(0, need)];
   }
-  pool = shuffle(pool).slice(0, count);
-  // If not enough, fill from any tier
-  if (pool.length < count) {
-    const extra = COUNTRIES.filter(c => !usedCountries.has(c.code) && !pool.find(p => p.code === c.code));
-    pool = [...pool, ...shuffle(extra).slice(0, count - pool.length)];
+
+  // Dernier recours : n'importe quel pays pas encore utilisé
+  if (picked.length < count) {
+    const extra = shuffle(COUNTRIES.filter(c => !usedCountries.has(c.code) && !picked.find(p => p.code === c.code)));
+    picked = [...picked, ...extra.slice(0, count - picked.length)];
   }
-  pool.forEach(c => usedCountries.add(c.code));
-  return pool;
+
+  // Mélanger l'ordre final et marquer comme utilisés
+  picked = shuffle(picked);
+  picked.forEach(c => usedCountries.add(c.code));
+  return picked;
 }
 
 function hasCard(id) { return activeCards.includes(id); }
