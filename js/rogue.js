@@ -44,6 +44,13 @@ const ALL_REWARDS = [
     desc: "Consommable — Remplace le drapeau actuel par un autre du même niveau.",
     type: "consumable",
   },
+  {
+    id: "time_travel",
+    name: "Voyage temporel",
+    icon: "⏳",
+    desc: "Consommable — Répondez à 2 drapeaux faciles pour passer le drapeau actuel.",
+    type: "consumable",
+  },
 ];
 
 const CONTINENT_NAMES = {
@@ -205,7 +212,6 @@ function applyConsumable(id) {
   }
 
   if (id === "swap_flag") {
-    // Replace current flag with another from same tier
     const currentTier = q.tier;
     const candidates = COUNTRIES.filter(c =>
       c.tier === currentTier &&
@@ -214,13 +220,16 @@ function applyConsumable(id) {
     );
     if (candidates.length > 0) {
       const newFlag = candidates[Math.floor(Math.random() * candidates.length)];
-      // Remove old from used, add new
       usedCountries.delete(q.code);
       usedCountries.add(newFlag.code);
       roundFlags[flagIndex] = newFlag;
       revealedLettersOnCurrent = [];
       loadRogueFlag();
     }
+  }
+
+  if (id === "time_travel") {
+    startTimeTravel();
   }
 }
 
@@ -354,6 +363,7 @@ function startNextRound() {
 
   $('rogueGame').style.display = 'block';
   updateActRoundDisplay();
+  updateActDots();
   updateLivesDisplay();
   updateRogueProgress();
   renderInventory();
@@ -503,16 +513,146 @@ function buildRogueRecap() {
   });
 }
 
+// ===== ACT PROGRESS DOTS =====
+
+function updateActDots() {
+  const el = $('actDots');
+  let html = '';
+  for (let r = 1; r <= ROUNDS_PER_ACT; r++) {
+    let cls = 'act-dot';
+    if (r < round) cls += ' act-dot-done';
+    else if (r === round) cls += ' act-dot-current';
+    html += `<span class="${cls}"></span>`;
+  }
+  el.innerHTML = html;
+}
+
+// ===== TIME TRAVEL MINI-GAME =====
+
+let ttFlags = [];
+let ttIndex = 0;
+let ttAnswered = false;
+let ttCorrectCount = 0;
+
+function startTimeTravel() {
+  // Pick 2 flags from previous act tier (or current if act 1)
+  const ttTier = act > 1 ? act - 1 : 1;
+  const pool = COUNTRIES.filter(c => c.tier === ttTier && !usedCountries.has(c.code));
+  ttFlags = shuffle(pool).slice(0, 2);
+  // If not enough, fill from any easy tier
+  if (ttFlags.length < 2) {
+    const extra = COUNTRIES.filter(c => c.tier <= 2 && !usedCountries.has(c.code) && !ttFlags.find(f => f.code === c.code));
+    ttFlags = [...ttFlags, ...shuffle(extra).slice(0, 2 - ttFlags.length)];
+  }
+  ttIndex = 0;
+  ttCorrectCount = 0;
+  ttAnswered = false;
+
+  $('rogueGame').style.display = 'none';
+  $('timeTravelScreen').style.display = 'block';
+  loadTimeTravelFlag();
+}
+
+function loadTimeTravelFlag() {
+  ttAnswered = false;
+  const q = ttFlags[ttIndex];
+  $('ttFlag').src = flagUrl(q.code);
+  $('ttCount').textContent = `${ttIndex + 1} / 2`;
+  $('ttInput').value = '';
+  $('ttInput').disabled = false;
+  $('ttSubmitBtn').disabled = false;
+  $('ttFeedback').classList.remove('visible');
+  $('ttNextBtn').style.display = 'none';
+  $('ttCard').classList.remove('success', 'fail');
+  $('ttInput').focus();
+}
+
+function checkTimeTravelAnswer() {
+  if (ttAnswered) return;
+  const input = $('ttInput').value;
+  if (!input.trim()) return;
+
+  const q = ttFlags[ttIndex];
+  const correct = q.names.some(n => isCloseEnough(input, n));
+
+  ttAnswered = true;
+  $('ttInput').disabled = true;
+  $('ttSubmitBtn').disabled = true;
+
+  if (correct) {
+    ttCorrectCount++;
+    $('ttResultText').textContent = 'Correct ! ✓';
+    $('ttResultText').className = 'result-text correct';
+    $('ttCard').classList.add('success', 'pop');
+  } else {
+    $('ttResultText').textContent = 'Raté !';
+    $('ttResultText').className = 'result-text wrong';
+    $('ttCard').classList.add('fail', 'shake');
+  }
+  $('ttAnswerReveal').textContent = cap(q.names[0]);
+  $('ttFeedback').classList.add('visible');
+  $('ttNextBtn').style.display = 'block';
+  setTimeout(() => $('ttCard').classList.remove('shake', 'pop'), 500);
+}
+
+function nextTimeTravelFlag() {
+  ttIndex++;
+  if (ttIndex >= 2) {
+    // Done — if both correct, skip the current rogue flag
+    $('timeTravelScreen').style.display = 'none';
+    $('rogueGame').style.display = 'block';
+
+    if (ttCorrectCount === 2) {
+      // Mark current flag as skipped via time travel
+      const q = roundFlags[flagIndex];
+      history.push({ code: q.code, name: cap(q.names[0]), status: 'ok', userAnswer: '⏳ Voyage temporel' });
+      totalCorrect++;
+
+      // Move to next flag
+      answered = true;
+      nextRogueFlag();
+    } else {
+      // Failed time travel — back to the same flag, no penalty
+      loadRogueFlag();
+    }
+  } else {
+    loadTimeTravelFlag();
+  }
+}
+
+// ===== GOD MODE =====
+
+function godModeAddLife() {
+  lives++;
+  updateLivesDisplay();
+}
+
 // ===== KEYBOARD =====
 
 document.addEventListener('DOMContentLoaded', () => {
   $('rogueInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') { answered ? nextRogueFlag() : checkRogueAnswer(); }
   });
-  document.addEventListener('keydown', e => {
-    if (!answered) return;
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextRogueFlag(); }
+
+  $('ttInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { ttAnswered ? nextTimeTravelFlag() : checkTimeTravelAnswer(); }
   });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      // Time travel screen
+      if ($('timeTravelScreen').style.display !== 'none' && ttAnswered) {
+        e.preventDefault();
+        nextTimeTravelFlag();
+        return;
+      }
+      // Main game
+      if (!answered) return;
+      e.preventDefault();
+      nextRogueFlag();
+    }
+  });
+
   initMobileScrollFix();
   startRun();
 });
