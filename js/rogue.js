@@ -38,7 +38,7 @@ const HISTORICAL_FLAGS = [
     displayName: "Allemagne de l'Est (RDA)",
   },
   {
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_South_Vietnam.svg/1280px-Flag_of_South_Vietnam.svg.png",
+    url: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Flag_of_South_Vietnam.svg",
     names: ["vietnam du sud", "sud vietnam", "republique du vietnam"],
     displayName: "Vietnam du Sud",
   },
