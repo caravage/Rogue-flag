@@ -22,6 +22,36 @@ const BOSS_TYPES = [
   { id: "zoom",     name: "Boss Zoom",      icon: "🔍", desc: "Vue rapprochée qui s'élargit progressivement", css: "boss-zoom" },
   { id: "pixel",    name: "Boss Pixelisé",  icon: "📦", desc: "Drapeau flouté qui se précise peu à peu", css: "boss-pixel" },
   { id: "memory",   name: "Boss Mémoire",   icon: "🧠", desc: "Le drapeau disparaît après 3 secondes", css: "boss-memory" },
+  { id: "historical", name: "Boss Historique", icon: "📜", desc: "Drapeaux de pays qui n'existent plus", css: "boss-historical" },
+];
+
+// Historical flags — not from flagcdn, custom URLs
+const HISTORICAL_FLAGS = [
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg",
+    names: ["urss", "union sovietique", "union des republiques socialistes sovietiques", "soviet"],
+    displayName: "URSS",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Flag_of_East_Germany.svg/1280px-Flag_of_East_Germany.svg.png",
+    names: ["allemagne de l'est", "allemagne de lest", "rda", "republique democratique allemande"],
+    displayName: "Allemagne de l'Est (RDA)",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_South_Vietnam.svg/1280px-Flag_of_South_Vietnam.svg.png",
+    names: ["vietnam du sud", "sud vietnam", "republique du vietnam"],
+    displayName: "Vietnam du Sud",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Flag_of_China_%281889%E2%80%931912%29.svg/1280px-Flag_of_China_%281889%E2%80%931912%29.svg.png",
+    names: ["qing", "dynastie qing", "empire qing", "chine qing"],
+    displayName: "Dynastie Qing",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Byzantine_imperial_flag%2C_14th_century%2C_square.svg/1280px-Byzantine_imperial_flag%2C_14th_century%2C_square.svg.png",
+    names: ["empire byzantin", "byzantin", "byzance"],
+    displayName: "Empire Byzantin",
+  },
 ];
 
 const CONTINENT_NAMES = {
@@ -42,6 +72,9 @@ let qcmActive = false;
 let inBoss = false, currentBossType = null;
 let bossEffectInterval = null; // for zoom/pixel timers
 let memoryTimeout = null;
+let flagTimer = null;       // countdown interval
+let flagTimerStart = null;  // timestamp when flag was loaded
+let historicalBossFlags = []; // shuffled picks for historical boss
 
 // ===== HELPERS =====
 
@@ -291,13 +324,20 @@ function applyBossEffect() {
   }
 }
 
+function prepareBossFlags(bossType) {
+  if (bossType.id === 'historical') {
+    // Use historical flags instead of regular countries
+    return shuffle([...HISTORICAL_FLAGS]).slice(0, CONFIG.BOSS_FLAGS);
+  }
+  return generateFlags(CONFIG.BOSS_FLAGS, act);
+}
+
 function startBoss() {
   inBoss = true;
   currentBossType = BOSS_TYPES[Math.floor(Math.random() * BOSS_TYPES.length)];
-  roundFlags = generateFlags(CONFIG.BOSS_FLAGS, act);
+  roundFlags = prepareBossFlags(currentBossType);
   flagIndex = 0; roundResults = []; answered = false;
-  // Preload boss flags
-  preloadImages(roundFlags);
+  preloadImages(roundFlags.filter(f => f.code)); // only preload flagcdn ones
   $('rogueGame').style.display = 'none'; $('cardChoiceScreen').style.display = 'none';
   $('bossIntro').style.display = 'block';
   $('bossIntroIcon').textContent = currentBossType.icon;
@@ -306,12 +346,11 @@ function startBoss() {
 }
 
 function startBossById(bossId) {
-  // God mode: pick specific boss
   inBoss = true;
   currentBossType = BOSS_TYPES.find(b => b.id === bossId) || BOSS_TYPES[0];
-  roundFlags = generateFlags(CONFIG.BOSS_FLAGS, act);
+  roundFlags = prepareBossFlags(currentBossType);
   flagIndex = 0; roundResults = []; answered = false;
-  preloadImages(roundFlags);
+  preloadImages(roundFlags.filter(f => f.code));
   $('godPanel').style.display = 'none';
   $('rogueGame').style.display = 'none'; $('cardChoiceScreen').style.display = 'none';
   $('bossIntro').style.display = 'block';
@@ -344,7 +383,7 @@ function startRun() {
   usedCountries = new Set(); permanents = {}; consumables = {};
   secondWindUsed = false; revealedLettersOnCurrent = [];
   inBoss = false; currentBossType = null; history = []; roundResults = [];
-  clearBossEffects();
+  clearBossEffects(); stopTimer();
   $('rogueEnd').style.display = 'none'; $('cardChoiceScreen').style.display = 'none';
   $('bossIntro').style.display = 'none'; $('timeTravelScreen').style.display = 'none';
   updateScore(); showActScreen();
@@ -377,13 +416,20 @@ function loadRogueFlag() {
   answered = false; revealedLettersOnCurrent = []; qcmActive = false;
   $('qcmOverlay').style.display = 'none';
   clearBossEffects();
+  stopTimer();
 
   const q = roundFlags[flagIndex];
   const img = $('rogueFlag');
-  img.src = flagUrl(q.code);
+
+  // Historical boss uses custom URLs
+  if (inBoss && currentBossType && currentBossType.id === 'historical') {
+    img.src = q.url || flagUrl(q.code);
+  } else {
+    img.src = flagUrl(q.code);
+  }
 
   // Apply boss effect
-  if (inBoss && currentBossType) applyBossEffect();
+  if (inBoss && currentBossType && currentBossType.id !== 'historical') applyBossEffect();
 
   updateFlagDots();
   $('rogueInput').value = ''; $('rogueInput').disabled = false; $('rogueSubmitBtn').disabled = false;
@@ -395,14 +441,67 @@ function loadRogueFlag() {
   if (inBoss && currentBossType) { $('bossLabel').textContent = currentBossType.icon + ' ' + currentBossType.name; $('bossLabel').style.display = 'block'; }
   else $('bossLabel').style.display = 'none';
 
-  if (hasPermanent("show_continent")) { $('rogueContinentHint').textContent = CONTINENT_NAMES[q.c] || ''; $('rogueContinentHint').style.display = 'block'; }
+  if (hasPermanent("show_continent") && q.c) { $('rogueContinentHint').textContent = CONTINENT_NAMES[q.c] || ''; $('rogueContinentHint').style.display = 'block'; }
   else $('rogueContinentHint').style.display = 'none';
 
   $('rogueLetterHint').style.display = 'none';
-  renderInventory(); $('rogueInput').focus();
+  renderInventory();
+  startTimer();
+  $('rogueInput').focus();
+}
+
+// ===== TIMER =====
+
+function startTimer() {
+  stopTimer();
+  flagTimerStart = Date.now();
+  updateTimerDisplay();
+  flagTimer = setInterval(() => {
+    if (answered) { stopTimer(); return; }
+    const elapsed = Date.now() - flagTimerStart;
+    const remaining = CONFIG.FLAG_TIMER_MS - elapsed;
+    updateTimerDisplay();
+    if (remaining <= 0) {
+      stopTimer();
+      timerExpired();
+    }
+  }, 100);
+}
+
+function stopTimer() {
+  if (flagTimer) { clearInterval(flagTimer); flagTimer = null; }
+  $('timerBar').style.width = '100%';
+  $('timerBar').classList.remove('timer-danger');
+}
+
+function updateTimerDisplay() {
+  const elapsed = Date.now() - flagTimerStart;
+  const pct = Math.max(0, 1 - elapsed / CONFIG.FLAG_TIMER_MS) * 100;
+  $('timerBar').style.width = pct + '%';
+  if (pct < 30) $('timerBar').classList.add('timer-danger');
+  else $('timerBar').classList.remove('timer-danger');
+}
+
+function timerExpired() {
+  if (answered) return;
+  const q = roundFlags[flagIndex];
+  answered = true; lives--; totalWrong++; roundResults.push('ko');
+  const name = q.displayName || cap(q.names[0]);
+  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏱️ Temps écoulé', url: q.url });
+  if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
+  else $('rogueResultText').textContent = '⏱️ Temps écoulé ! -1 ❤️';
+  $('rogueResultText').className = 'result-text wrong';
+  $('rogueAnswerReveal').textContent = 'Réponse : ' + name;
+  $('rogueCard').classList.add('fail', 'shake');
+  $('rogueFeedback').classList.add('visible');
+  lockAfterAnswer();
+  updateLivesDisplay(); updateFlagDots(); renderInventory();
+  setTimeout(() => $('rogueCard').classList.remove('shake'), 500);
+  if (lives <= 0) { /* wait for user to press next */ }
 }
 
 function lockAfterAnswer() {
+  stopTimer();
   $('rogueInput').disabled = true; $('rogueSubmitBtn').disabled = true;
   $('roguePassBtn').style.display = 'none';
   $('rogueNextBtn').style.display = 'block'; $('rogueNextHint').style.display = 'block';
@@ -411,7 +510,6 @@ function lockAfterAnswer() {
     $('rogueFlag').style.visibility = 'visible';
     if (memoryTimeout) { clearTimeout(memoryTimeout); memoryTimeout = null; }
   }
-  // Stop boss animations
   if (bossEffectInterval) { clearInterval(bossEffectInterval); bossEffectInterval = null; }
 }
 
@@ -421,34 +519,36 @@ function checkRogueAnswer() {
   if (!input.trim()) return;
   const q = roundFlags[flagIndex];
   const correct = q.names.some(n => isCloseEnough(input, n));
+  const name = q.displayName || cap(q.names[0]);
   answered = true;
 
   if (correct) {
     totalCorrect++; score += pointsPerFlag(); roundResults.push('ok');
     $('rogueResultText').textContent = `Correct ! +${pointsPerFlag()} pt${pointsPerFlag() > 1 ? 's' : ''}`;
     $('rogueResultText').className = 'result-text correct';
-    $('rogueAnswerReveal').textContent = cap(q.names[0]);
+    $('rogueAnswerReveal').textContent = name;
     $('rogueCard').classList.add('success', 'pop');
-    history.push({ code: q.code, name: cap(q.names[0]), status: 'ok', userAnswer: input });
+    history.push({ code: q.code || 'hist', name: name, status: 'ok', userAnswer: input, url: q.url });
   } else {
     totalWrong++; lives--; roundResults.push('ko');
     if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
     else $('rogueResultText').textContent = 'Raté ! -1 ❤️';
     $('rogueResultText').className = 'result-text wrong';
-    $('rogueAnswerReveal').textContent = 'Réponse : ' + cap(q.names[0]);
+    $('rogueAnswerReveal').textContent = 'Réponse : ' + name;
     $('rogueCard').classList.add('fail', 'shake');
-    history.push({ code: q.code, name: cap(q.names[0]), status: 'ko', userAnswer: input });
+    history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: input, url: q.url });
   }
 
   $('rogueFeedback').classList.add('visible');
   lockAfterAnswer();
   updateLivesDisplay(); updateScore(); updateFlagDots(); renderInventory();
   setTimeout(() => $('rogueCard').classList.remove('shake', 'pop'), 500);
-  if (lives <= 0) setTimeout(() => gameOver(), 800);
+  // No auto-gameOver: user must click "Suivant" which will trigger gameOver if lives <= 0
 }
 
 function nextRogueFlag() {
-  if (lives <= 0) return;
+  // Check game over when user clicks next
+  if (lives <= 0) { gameOver(); return; }
   flagIndex++;
   if (flagIndex >= roundFlags.length) {
     if (inBoss) startNextRound();
@@ -462,18 +562,18 @@ function nextRogueFlag() {
 function roguePass() {
   if (answered) return;
   const q = roundFlags[flagIndex];
+  const name = q.displayName || cap(q.names[0]);
   answered = true; lives--; totalWrong++; roundResults.push('ko');
-  history.push({ code: q.code, name: cap(q.names[0]), status: 'ko', userAnswer: '⏭ Passé' });
+  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏭ Passé', url: q.url });
   if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
   else $('rogueResultText').textContent = 'Passé ! -1 ❤️';
   $('rogueResultText').className = 'result-text wrong';
-  $('rogueAnswerReveal').textContent = 'Réponse : ' + cap(q.names[0]);
+  $('rogueAnswerReveal').textContent = 'Réponse : ' + name;
   $('rogueCard').classList.add('fail', 'shake');
   $('rogueFeedback').classList.add('visible');
   lockAfterAnswer();
   updateLivesDisplay(); updateFlagDots(); renderInventory();
   setTimeout(() => $('rogueCard').classList.remove('shake'), 500);
-  if (lives <= 0) setTimeout(() => gameOver(), 800);
 }
 
 // ===== END SCREENS =====
@@ -500,7 +600,8 @@ function buildRogueRecap() {
   history.forEach((h, i) => {
     const row = document.createElement('div');
     row.className = `recap-row ${h.status} fade-in`; row.style.animationDelay = (i * 0.03) + 's';
-    row.innerHTML = `<img class="recap-flag" src="${flagUrl(h.code)}" alt="${h.name}"><div class="recap-info"><div class="recap-country">${h.name}</div><div class="recap-detail">Votre réponse : ${h.userAnswer}</div></div><span class="recap-badge ${h.status}">${h.status === 'ok' ? '✓' : '✗'}</span>`;
+    const imgSrc = h.url || flagUrl(h.code);
+    row.innerHTML = `<img class="recap-flag" src="${imgSrc}" alt="${h.name}"><div class="recap-info"><div class="recap-country">${h.name}</div><div class="recap-detail">Votre réponse : ${h.userAnswer}</div></div><span class="recap-badge ${h.status}">${h.status === 'ok' ? '✓' : '✗'}</span>`;
     g.appendChild(row);
   });
 }
