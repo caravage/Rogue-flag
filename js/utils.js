@@ -28,10 +28,26 @@ function levenshtein(a, b) {
 function isCloseEnough(input, target) {
   const ni = normalize(input);
   const nt = normalize(target);
-  if (!ni) return false;
+  if (!ni || ni.length < 3) return false;
+  // Match exact
   if (ni === nt) return true;
-  if (nt.includes(ni) || ni.includes(nt)) return true;
-  return levenshtein(ni, nt) <= Math.max(1, Math.floor(nt.length * 0.3));
+  // Multi-word targets: accept if input matches the first word(s) closely
+  // Split on spaces and hyphens (normalize already strips hyphens, but names[] may have spaces)
+  const targetWords = nt.split(/[\s]+/);
+  if (targetWords.length > 1) {
+    for (let w = 1; w <= targetWords.length; w++) {
+      const partial = targetWords.slice(0, w).join(' ');
+      if (partial.length >= 4 && (ni === partial || levenshtein(ni, partial) <= Math.max(1, Math.floor(partial.length * 0.25)))) {
+        return true;
+      }
+    }
+  }
+  // Substring match only if input is long enough (at least 65% of target, min 4 chars)
+  if (ni.length >= Math.max(4, Math.ceil(nt.length * 0.65))) {
+    if (nt.includes(ni) || ni.includes(nt)) return true;
+  }
+  // Levenshtein with 25% tolerance
+  return levenshtein(ni, nt) <= Math.max(1, Math.floor(nt.length * 0.25));
 }
 
 function shuffle(a) {
