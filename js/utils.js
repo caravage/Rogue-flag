@@ -67,3 +67,35 @@ const FLAG_BASE_URL = "https://flagcdn.com/w320/";
 function flagUrl(code) {
   return FLAG_BASE_URL + code + ".png";
 }
+
+// Mobile: keep flag visible when keyboard opens
+// On iOS, the keyboard pushes the viewport up and auto-scrolls to the input.
+// We override this to scroll to the top of the card instead.
+function initMobileScrollFix() {
+  document.querySelectorAll('input[type="text"]').forEach(input => {
+    input.addEventListener('focus', () => {
+      // Small delay to let the keyboard open first
+      setTimeout(() => {
+        const flag = document.querySelector('.flag-container') || document.querySelector('#rogueFlag');
+        const card = input.closest('.card');
+        const target = card || flag;
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
+    });
+  });
+
+  // Also handle the visualViewport resize event (more reliable on iOS)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const active = document.activeElement;
+      if (active && active.tagName === 'INPUT') {
+        const card = active.closest('.card');
+        if (card) {
+          setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
+      }
+    });
+  }
+}
