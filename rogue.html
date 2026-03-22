@@ -49,6 +49,7 @@
         <div class="rogue-act" id="actDisplay">Acte 1</div>
         <div class="rogue-round" id="roundDisplay">Round 1 / 4</div>
       </div>
+      <div class="act-dots" id="actDots"></div>
       <div class="rogue-lives" id="livesDisplay">❤️❤️❤️</div>
     </div>
 
@@ -72,6 +73,25 @@
     </div>
   </div>
 
+  <!-- TIME TRAVEL MINI-GAME -->
+  <div class="time-travel-screen" id="timeTravelScreen" style="display:none">
+    <h2>⏳ Voyage temporel</h2>
+    <p>Répondez à 2 drapeaux faciles pour passer le drapeau actuel</p>
+    <div class="card" id="ttCard">
+      <div class="flag-container"><img id="ttFlag" src="" alt="Drapeau"></div>
+      <div class="rogue-flag-count" id="ttCount">1 / 2</div>
+      <div class="input-row">
+        <input type="text" id="ttInput" placeholder="Nom du pays..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button id="ttSubmitBtn" onclick="checkTimeTravelAnswer()">Valider</button>
+      </div>
+      <div class="feedback" id="ttFeedback">
+        <div class="result-text" id="ttResultText"></div>
+        <div class="answer-reveal" id="ttAnswerReveal"></div>
+      </div>
+      <button class="next-btn" id="ttNextBtn" onclick="nextTimeTravelFlag()" style="display:none">Suivant →</button>
+    </div>
+  </div>
+
   <!-- END SCREEN -->
   <div class="rogue-end" id="rogueEnd">
     <h2 id="rogueEndTitle">Game Over</h2>
@@ -83,6 +103,9 @@
     <br>
     <a href="index.html" class="back-menu-btn">← Accueil</a>
   </div>
+
+  <!-- GOD MODE -->
+  <button class="god-mode-btn" onclick="godModeAddLife()" title="God Mode: +1 vie">🔧</button>
 </div>
 <script src="data/countries.js"></script>
 <script src="js/utils.js"></script>
