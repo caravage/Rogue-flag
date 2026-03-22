@@ -2,11 +2,65 @@
 
 /* ===== Progress row with score ===== */
 .progress-row {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
 }
 .score-display {
   font-family: 'DM Serif Display', serif;
   font-size: 1.1rem; color: var(--accent); white-space: nowrap;
+}
+
+/* ===== Layout: tracker + main ===== */
+.rogue-layout {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.rogue-main { flex: 1; min-width: 0; }
+
+/* ===== Vertical act tracker ===== */
+.act-tracker {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; padding: 8px 4px; min-width: 44px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 12px;
+}
+
+.tracker-node {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 0;
+}
+
+.tracker-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--card-border);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+  display: block;
+}
+
+.tracker-done .tracker-dot {
+  background: var(--green); box-shadow: 0 0 6px var(--green-glow);
+}
+.tracker-current .tracker-dot {
+  background: var(--accent); box-shadow: 0 0 10px var(--accent-glow);
+  transform: scale(1.4);
+}
+
+.tracker-icon {
+  font-size: 1rem; display: block;
+}
+
+.tracker-label {
+  font-size: 0.58rem; color: var(--text-dim); font-weight: 500;
+  margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tracker-current .tracker-label { color: var(--accent); }
+.tracker-done .tracker-label { color: var(--green); }
+
+.tracker-boss .tracker-icon { font-size: 1.1rem; }
+.tracker-boss.tracker-current .tracker-icon { transform: scale(1.2); }
+
+.tracker-line {
+  width: 2px; height: 12px;
+  background: var(--card-border);
+  margin: 2px 0;
 }
 
 /* ===== Lives & Status bar ===== */
@@ -19,22 +73,7 @@
 .rogue-act { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--accent); }
 .rogue-round { font-size: 0.82rem; color: var(--text-dim); font-weight: 300; }
 
-/* ===== Act progress dots ===== */
-.act-dots { display: flex; gap: 6px; align-items: center; }
-.act-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--card-border); transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0; /* hide emoji text for normal dots */
-}
-.act-dot-done { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
-.act-dot-current { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); transform: scale(1.3); }
-.act-dot-boss {
-  width: auto; height: auto; background: none;
-  font-size: 0.7rem; padding: 0 2px;
-}
-.act-dot-boss.act-dot-done { background: none; box-shadow: none; }
-.act-dot-boss.act-dot-current { background: none; transform: scale(1.4); }
+/* (act dots replaced by vertical tracker) */
 
 /* ===== Flag status dots ===== */
 .flag-dots-row {
