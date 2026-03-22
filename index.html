@@ -6,90 +6,55 @@
   <title>Quiz des Drapeaux du Monde</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .mode-grid {
+      display: flex; flex-direction: column; gap: 16px; margin-top: 32px;
+    }
+    .mode-card {
+      background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 28px 24px; cursor: pointer; text-decoration: none;
+      transition: border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+      display: block;
+    }
+    .mode-card:hover {
+      border-color: var(--accent); transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+    .mode-icon { font-size: 2rem; margin-bottom: 12px; }
+    .mode-name {
+      font-family: 'DM Serif Display', serif; font-size: 1.3rem;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .mode-desc { font-size: 0.85rem; color: var(--text-dim); font-weight: 300; line-height: 1.5; }
+    .mode-tag {
+      display: inline-block; font-size: 0.68rem; font-weight: 600;
+      padding: 3px 8px; border-radius: 6px; margin-top: 10px;
+    }
+    .mode-tag.classic { background: rgba(52,211,153,0.15); color: var(--green); }
+    .mode-tag.rogue { background: rgba(248,113,113,0.15); color: var(--red); }
+  </style>
 </head>
 <body>
-
 <div class="container">
   <header>
     <h1>Quiz des Drapeaux</h1>
-    <p>Devinez le pays — 3 essais par drapeau</p>
+    <p>Testez vos connaissances en géographie</p>
   </header>
 
-  <!-- MENU -->
-  <div class="menu-screen" id="menuScreen">
-    <h2>Choisissez une catégorie</h2>
-    <div class="cat-grid" id="catGrid"></div>
-  </div>
-
-  <!-- GAME -->
-  <div class="game-zone" id="gameZone">
-    <div class="progress-track">
-      <div class="progress-fill" id="progress" style="width: 0%"></div>
-    </div>
-
-    <div class="score-bar">
-      <div class="score-item">
-        <div class="label">Correct</div>
-        <div class="value correct" id="scoreCorrect">0</div>
-      </div>
-      <div class="score-item">
-        <div class="label">Erreurs</div>
-        <div class="value wrong" id="scoreWrong">0</div>
-      </div>
-      <div class="score-item">
-        <div class="label">Série</div>
-        <div class="value streak" id="scoreStreak">0</div>
-      </div>
-    </div>
-
-    <div class="card" id="gameCard">
-      <div style="text-align:center">
-        <span class="cat-tag" id="catTag"></span>
-      </div>
-      <div class="flag-container">
-        <img id="flagImg" src="" alt="Drapeau">
-      </div>
-      <div class="question-label">
-        Question <span class="question-num" id="questionNum">1</span> / <span id="totalQ">20</span>
-      </div>
-      <div class="attempts-bar" id="attemptsBar">
-        <div class="attempt-dot available"></div>
-        <div class="attempt-dot available"></div>
-        <div class="attempt-dot available"></div>
-      </div>
-      <div class="input-row">
-        <input type="text" id="answerInput" placeholder="Nom du pays..." autocomplete="off">
-        <button id="submitBtn" onclick="checkAnswer()">Valider</button>
-      </div>
-      <div class="action-row">
-        <button class="skip-btn" id="skipBtn" onclick="skipQuestion()">Passer ⏭</button>
-        <button class="hint-btn" id="hintBtn" onclick="showHint()">Indice</button>
-      </div>
-      <div class="hint-text" id="hintText"></div>
-      <div class="feedback" id="feedback">
-        <div class="result-text" id="resultText"></div>
-        <div class="answer-reveal" id="answerReveal"></div>
-      </div>
-      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Suivant →</button>
-      <div class="next-hint" id="nextHint">Entrée ou Espace pour continuer</div>
-    </div>
-
-    <div class="end-screen" id="endScreen">
-      <h2>Partie terminée !</h2>
-      <div class="final-score" id="finalScore"></div>
-      <p id="endMessage"></p>
-      <div class="recap-title">Récapitulatif</div>
-      <div class="recap-grid" id="recapGrid"></div>
-      <button class="restart-btn" onclick="startGame(currentCategory)">Rejouer</button>
-      <br>
-      <button class="back-menu-btn" onclick="showMenu()">← Changer de catégorie</button>
-    </div>
+  <div class="mode-grid">
+    <a class="mode-card fade-in" href="normal.html" style="animation-delay: 0.05s">
+      <div class="mode-icon">🌍</div>
+      <div class="mode-name">Mode Normal</div>
+      <div class="mode-desc">20 questions par partie, 3 essais par drapeau. Choisissez votre continent ou jouez avec tous les pays du monde.</div>
+      <span class="mode-tag classic">Classique</span>
+    </a>
+    <a class="mode-card fade-in" href="rogue.html" style="animation-delay: 0.15s">
+      <div class="mode-icon">💀</div>
+      <div class="mode-name">Mode Rogue</div>
+      <div class="mode-desc">3 actes de difficulté croissante, des vies limitées et des cartes bonus à collectionner. Survivez jusqu'au bout !</div>
+      <span class="mode-tag rogue">Rogue-like</span>
+    </a>
   </div>
 </div>
-
-<!-- Scripts -->
-<script src="data/countries.js"></script>
-<script src="js/game.js"></script>
-
 </body>
 </html>
