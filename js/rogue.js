@@ -758,6 +758,17 @@ function nextTimeTravelFlag() {
 function toggleGodPanel() {
   const p = $('godPanel');
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
+  $('lbPanel').style.display = 'none';
+}
+function toggleLbPanel() {
+  const p = $('lbPanel');
+  const visible = p.style.display === 'block';
+  p.style.display = visible ? 'none' : 'block';
+  $('godPanel').style.display = 'none';
+  if (!visible) {
+    $('lbFloatContainer').innerHTML = '<div class="lb-empty">Chargement...</div>';
+    fetchLeaderboard(10).then(entries => renderLeaderboard(entries, 'lbFloatContainer'));
+  }
 }
 function godModeAddLife() { lives++; updateLivesDisplay(); }
 function godModeBoss(bossId) { startBossById(bossId); }
