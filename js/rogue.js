@@ -406,6 +406,8 @@ function startRun() {
   clearBossEffects(); stopTimer();
   $('rogueEnd').style.display = 'none'; $('cardChoiceScreen').style.display = 'none';
   $('bossIntro').style.display = 'none'; $('timeTravelScreen').style.display = 'none';
+  $('pseudoSection').style.display = 'none'; $('pseudoThanks').style.display = 'none';
+  $('pseudoSubmitBtn').disabled = false; $('pseudoSubmitBtn').textContent = 'OK';
   updateScore(); showActScreen();
 }
 
