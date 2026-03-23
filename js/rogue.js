@@ -4,7 +4,7 @@
 const CARD_REWARDS = [
   { id: "second_wind", name: "Second souffle", icon: "💨", desc: "Permanent — Première mort annulée, revenez à 1 vie.", type: "permanent" },
   { id: "show_continent", name: "Continent affiché", icon: "🗺️", desc: "Permanent — Le continent est toujours visible.", type: "permanent" },
-  { id: "reveal_letter", name: "Lettre révélée", icon: "🔤", desc: "Consommable — Révèle une lettre au hasard.", type: "consumable" },
+  { id: "reveal_letter", name: "Lettre révélée", icon: "🔤", desc: "Permanent — Une lettre au hasard est révélée sur chaque drapeau. Cumulable ×3.", type: "permanent", maxStack: 3 },
   { id: "swap_flag", name: "Changement de drapeau", icon: "🔄", desc: "Consommable — Remplace le drapeau par un autre du même niveau.", type: "consumable" },
   { id: "time_travel", name: "Voyage temporel", icon: "⏳", desc: "Consommable — 2 drapeaux faciles pour passer le drapeau actuel.", type: "consumable" },
   { id: "qcm", name: "QCM", icon: "🎯", desc: "Consommable — Affiche 6 choix possibles dont la bonne réponse.", type: "consumable" },
@@ -98,7 +98,8 @@ function generateFlags(count, forAct) {
 }
 
 function pointsPerFlag() { return CONFIG.POINTS_PER_ACT[act] || act; }
-function hasPermanent(id) { return !!permanents[id]; }
+function hasPermanent(id) { return (permanents[id] || 0) > 0; }
+function permanentCount(id) { return permanents[id] || 0; }
 function consumableCount(id) { return consumables[id] || 0; }
 
 function buildHintDisplay(name, revealed) {
@@ -173,49 +174,58 @@ function updateFlagDots() {
 }
 
 function renderInventory() {
-  let h = '';
+  // Permanents row
+  let permHtml = '';
   for (const id of Object.keys(permanents)) {
+    if (permanents[id] <= 0) continue;
     const r = CARD_REWARDS.find(r => r.id === id);
-    if (r) h += `<span class="inv-badge inv-permanent" title="${r.desc}">${r.icon}</span>`;
+    if (!r) continue;
+    const count = permanents[id];
+    permHtml += `<span class="inv-badge inv-permanent" title="${r.desc}">${r.icon}${count > 1 ? ' ×' + count : ''}</span>`;
   }
+  $('permCardsDisplay').innerHTML = permHtml;
+
+  // Consumables row
+  let consHtml = '';
   for (const id of Object.keys(consumables)) {
     if (consumables[id] <= 0) continue;
     const r = CARD_REWARDS.find(r => r.id === id);
     if (!r) continue;
     const dis = answered ? ' inv-disabled' : '';
-    h += `<span class="inv-badge inv-consumable${dis}" title="${r.desc}" onclick="useConsumable('${id}')">${r.icon}${consumables[id] > 1 ? ' ×' + consumables[id] : ''}</span>`;
+    consHtml += `<span class="inv-badge inv-consumable${dis}" title="${r.desc}" onclick="useConsumable('${id}')">${r.icon}${consumables[id] > 1 ? ' ×' + consumables[id] : ''}</span>`;
   }
-  $('activeCardsDisplay').innerHTML = h;
+  $('consCardsDisplay').innerHTML = consHtml;
 }
 
-// ===== CONFIRM MODAL =====
-function showConfirm(msg, cb) { $('confirmMessage').textContent = msg; $('confirmOverlay').style.display = 'flex'; $('confirmOverlay')._cb = cb; }
-function confirmYes() { $('confirmOverlay').style.display = 'none'; if ($('confirmOverlay')._cb) $('confirmOverlay')._cb(); }
-function confirmNo() { $('confirmOverlay').style.display = 'none'; }
-
-// ===== CONSUMABLES =====
+// ===== CONSUMABLES (no confirmation, direct use) =====
 
 function useConsumable(id) {
   if (answered) return;
   if (consumableCount(id) <= 0) return;
-  const r = CARD_REWARDS.find(r => r.id === id);
-  showConfirm(`Utiliser ${r.icon} ${r.name} ?`, () => { consumables[id]--; applyConsumable(id); renderInventory(); });
+  consumables[id]--;
+  applyConsumable(id);
+  renderInventory();
 }
 
 function applyConsumable(id) {
   const q = roundFlags[flagIndex];
-  if (id === "reveal_letter") {
-    const n = normalize(q.names[0]);
-    const av = [];
-    for (let i = 0; i < n.length; i++) if (n[i] !== ' ' && !revealedLettersOnCurrent.find(l => l.index === i)) av.push(i);
-    if (av.length) { const idx = av[Math.floor(Math.random() * av.length)]; revealedLettersOnCurrent.push({ index: idx, char: n[idx] }); updateLetterHint(); }
-  }
   if (id === "swap_flag") {
     const cands = COUNTRIES.filter(c => c.tier === q.tier && !usedCountries.has(c.code) && c.code !== q.code);
     if (cands.length) { const nf = cands[Math.floor(Math.random() * cands.length)]; usedCountries.delete(q.code); usedCountries.add(nf.code); roundFlags[flagIndex] = nf; revealedLettersOnCurrent = []; loadRogueFlag(); }
   }
   if (id === "time_travel") startTimeTravel();
   if (id === "qcm") showQCM();
+}
+
+function applyPassiveLetterReveal() {
+  const q = roundFlags[flagIndex];
+  const count = permanentCount("reveal_letter");
+  if (count <= 0) return;
+  const n = normalize(q.names[0]);
+  const indices = [];
+  for (let i = 0; i < n.length; i++) if (n[i] !== ' ') indices.push(i);
+  const picked = shuffle(indices).slice(0, Math.min(count, indices.length));
+  picked.forEach(idx => revealedLettersOnCurrent.push({ index: idx, char: n[idx] }));
 }
 
 function updateLetterHint() {
@@ -254,8 +264,14 @@ function showOddReward() {
 
 function showEvenReward() {
   $('rogueGame').style.display = 'none'; $('cardChoiceScreen').style.display = 'block';
-  let avail = CARD_REWARDS.filter(r => !(r.type === 'permanent' && hasPermanent(r.id)));
-  if (avail.length < 2) avail = CARD_REWARDS.filter(r => r.type !== 'permanent');
+  let avail = CARD_REWARDS.filter(r => {
+    if (r.type === 'permanent') {
+      if (r.maxStack) return permanentCount(r.id) < r.maxStack; // stackable: allow if under max
+      return !hasPermanent(r.id); // non-stackable: only if not owned
+    }
+    return true;
+  });
+  if (avail.length < 2) avail = CARD_REWARDS.filter(r => r.type === 'consumable');
   const picks = shuffle(avail).slice(0, 2);
   const c = $('cardChoices'); c.innerHTML = '';
   picks.forEach(rw => {
@@ -269,7 +285,11 @@ function showEvenReward() {
 function pickReward(id) {
   if (id === 'extra_life') lives++;
   else if (id === 'bonus_points') score += CONFIG.BONUS_POINTS_REWARD;
-  else { const r = CARD_REWARDS.find(r => r.id === id); if (r && r.type === 'permanent') permanents[id] = true; else if (r) consumables[id] = (consumables[id] || 0) + 1; }
+  else {
+    const r = CARD_REWARDS.find(r => r.id === id);
+    if (r && r.type === 'permanent') permanents[id] = (permanents[id] || 0) + 1;
+    else if (r) consumables[id] = (consumables[id] || 0) + 1;
+  }
   $('cardChoiceScreen').style.display = 'none';
   updateScore(); updateLivesDisplay(); startNextRound();
 }
@@ -444,7 +464,11 @@ function loadRogueFlag() {
   if (hasPermanent("show_continent") && q.c) { $('rogueContinentHint').textContent = CONTINENT_NAMES[q.c] || ''; $('rogueContinentHint').style.display = 'block'; }
   else $('rogueContinentHint').style.display = 'none';
 
+  // Passive letter reveal
   $('rogueLetterHint').style.display = 'none';
+  applyPassiveLetterReveal();
+  updateLetterHint();
+
   renderInventory();
   startTimer();
   $('rogueInput').focus();
@@ -487,7 +511,7 @@ function timerExpired() {
   const q = roundFlags[flagIndex];
   answered = true; lives--; totalWrong++; roundResults.push('ko');
   const name = q.displayName || cap(q.names[0]);
-  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏱️ Temps écoulé', url: q.url });
+  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏱️ Temps écoulé', url: q.url, act: act, boss: inBoss });
   if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
   else $('rogueResultText').textContent = '⏱️ Temps écoulé ! -1 ❤️';
   $('rogueResultText').className = 'result-text wrong';
@@ -528,7 +552,7 @@ function checkRogueAnswer() {
     $('rogueResultText').className = 'result-text correct';
     $('rogueAnswerReveal').textContent = name;
     $('rogueCard').classList.add('success', 'pop');
-    history.push({ code: q.code || 'hist', name: name, status: 'ok', userAnswer: input, url: q.url });
+    history.push({ code: q.code || 'hist', name: name, status: 'ok', userAnswer: input, url: q.url, act: act, boss: inBoss });
   } else {
     totalWrong++; lives--; roundResults.push('ko');
     if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
@@ -536,7 +560,7 @@ function checkRogueAnswer() {
     $('rogueResultText').className = 'result-text wrong';
     $('rogueAnswerReveal').textContent = 'Réponse : ' + name;
     $('rogueCard').classList.add('fail', 'shake');
-    history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: input, url: q.url });
+    history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: input, url: q.url, act: act, boss: inBoss });
   }
 
   $('rogueFeedback').classList.add('visible');
@@ -564,7 +588,7 @@ function roguePass() {
   const q = roundFlags[flagIndex];
   const name = q.displayName || cap(q.names[0]);
   answered = true; lives--; totalWrong++; roundResults.push('ko');
-  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏭ Passé', url: q.url });
+  history.push({ code: q.code || 'hist', name: name, status: 'ko', userAnswer: '⏭ Passé', url: q.url, act: act, boss: inBoss });
   if (lives <= 0 && hasPermanent("second_wind") && !secondWindUsed) { secondWindUsed = true; lives = 1; $('rogueResultText').textContent = '💨 Second souffle !'; }
   else $('rogueResultText').textContent = 'Passé ! -1 ❤️';
   $('rogueResultText').className = 'result-text wrong';
@@ -597,13 +621,52 @@ function victory() {
 
 function buildRogueRecap() {
   const g = $('rogueRecapGrid'); g.innerHTML = '';
-  history.forEach((h, i) => {
-    const row = document.createElement('div');
-    row.className = `recap-row ${h.status} fade-in`; row.style.animationDelay = (i * 0.03) + 's';
-    const imgSrc = h.url || flagUrl(h.code);
-    row.innerHTML = `<img class="recap-flag" src="${imgSrc}" alt="${h.name}"><div class="recap-info"><div class="recap-country">${h.name}</div><div class="recap-detail">Votre réponse : ${h.userAnswer}</div></div><span class="recap-badge ${h.status}">${h.status === 'ok' ? '✓' : '✗'}</span>`;
-    g.appendChild(row);
-  });
+  const actNames = { 1: "Acte I — Terres connues", 2: "Acte II — Horizons lointains", 3: "Acte III — Terra incognita" };
+  let idx = 0;
+
+  for (let a = 1; a <= CONFIG.ACTS; a++) {
+    const actEntries = history.filter(h => h.act === a && !h.boss);
+    const bossEntries = history.filter(h => h.act === a && h.boss);
+    if (actEntries.length === 0 && bossEntries.length === 0) continue;
+
+    // Act header
+    const header = document.createElement('div');
+    header.className = 'recap-act-header fade-in';
+    header.style.animationDelay = (idx * 0.03) + 's';
+    header.textContent = actNames[a] || `Acte ${a}`;
+    g.appendChild(header);
+    idx++;
+
+    // Round entries
+    actEntries.forEach(h => {
+      g.appendChild(createRecapRow(h, idx));
+      idx++;
+    });
+
+    // Boss entries
+    if (bossEntries.length > 0) {
+      const bossHeader = document.createElement('div');
+      bossHeader.className = 'recap-boss-header fade-in';
+      bossHeader.style.animationDelay = (idx * 0.03) + 's';
+      bossHeader.textContent = '💀 Boss';
+      g.appendChild(bossHeader);
+      idx++;
+
+      bossEntries.forEach(h => {
+        g.appendChild(createRecapRow(h, idx));
+        idx++;
+      });
+    }
+  }
+}
+
+function createRecapRow(h, idx) {
+  const row = document.createElement('div');
+  row.className = `recap-row ${h.status} fade-in`;
+  row.style.animationDelay = (idx * 0.03) + 's';
+  const imgSrc = h.url || flagUrl(h.code);
+  row.innerHTML = `<img class="recap-flag" src="${imgSrc}" alt="${h.name}"><div class="recap-info"><div class="recap-country">${h.name}</div><div class="recap-detail">Votre réponse : ${h.userAnswer}</div></div><span class="recap-badge ${h.status}">${h.status === 'ok' ? '✓' : '✗'}</span>`;
+  return row;
 }
 
 // ===== TIME TRAVEL =====
@@ -644,7 +707,7 @@ function nextTimeTravelFlag() {
     $('timeTravelScreen').style.display = 'none'; $('rogueGame').style.display = 'block';
     if (ttCorrectCount === CONFIG.TIME_TRAVEL_REQUIRED_CORRECT) {
       const q = roundFlags[flagIndex];
-      history.push({ code: q.code, name: cap(q.names[0]), status: 'ok', userAnswer: '⏳ Voyage temporel' });
+      history.push({ code: q.code, name: cap(q.names[0]), status: 'ok', userAnswer: '⏳ Voyage temporel', url: q.url, act: act, boss: inBoss });
       totalCorrect++; score += pointsPerFlag(); roundResults.push('ok');
       answered = true; updateScore(); updateFlagDots(); nextRogueFlag();
     } else loadRogueFlag();
