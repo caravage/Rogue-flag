@@ -602,21 +602,58 @@ function roguePass() {
 
 // ===== END SCREENS =====
 
+function getRunProgress() {
+  if (inBoss) return 'Boss';
+  return 'Round ' + round;
+}
+
 function gameOver() {
+  stopTimer(); clearBossEffects();
   $('rogueGame').style.display = 'none'; $('rogueEnd').style.display = 'block';
   $('rogueEndTitle').textContent = '💀 Game Over'; $('rogueEndTitle').style.color = 'var(--red)';
   $('rogueEndScore').textContent = `${score} points`;
-  $('rogueEndDetail').textContent = `Acte ${act} — ${inBoss ? 'Boss' : 'Round ' + round}\n${totalCorrect} bonnes réponses`;
+  $('rogueEndDetail').textContent = `Acte ${act} — ${getRunProgress()}\n${totalCorrect} bonnes réponses`;
+  $('pseudoSection').style.display = 'block';
+  $('pseudoInput').value = '';
+  $('pseudoInput').focus();
   buildRogueRecap();
+  loadLeaderboard();
 }
 
 function victory() {
+  stopTimer(); clearBossEffects();
   $('rogueGame').style.display = 'none'; $('cardChoiceScreen').style.display = 'none';
   $('rogueEnd').style.display = 'block';
   $('rogueEndTitle').textContent = '🏆 Victoire !'; $('rogueEndTitle').style.color = 'var(--accent)';
   $('rogueEndScore').textContent = `${score} points`;
   $('rogueEndDetail').textContent = `Run complétée ! ${totalCorrect} bonnes réponses\n${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''}`;
+  $('pseudoSection').style.display = 'block';
+  $('pseudoInput').value = '';
+  $('pseudoInput').focus();
   buildRogueRecap();
+  loadLeaderboard();
+}
+
+async function submitPseudo() {
+  const pseudo = $('pseudoInput').value.trim();
+  if (!pseudo) return;
+  $('pseudoSubmitBtn').disabled = true;
+  $('pseudoSubmitBtn').textContent = '...';
+  const progress = getRunProgress();
+  const ok = await submitScore(pseudo, score, act, progress, totalCorrect);
+  if (ok) {
+    $('pseudoSection').style.display = 'none';
+    $('pseudoThanks').style.display = 'block';
+    loadLeaderboard();
+  } else {
+    $('pseudoSubmitBtn').textContent = 'Erreur — Réessayer';
+    $('pseudoSubmitBtn').disabled = false;
+  }
+}
+
+async function loadLeaderboard() {
+  const entries = await fetchLeaderboard(10);
+  renderLeaderboard(entries, 'leaderboardContainer');
 }
 
 function buildRogueRecap() {
@@ -728,6 +765,7 @@ function godModeBoss(bossId) { startBossById(bossId); }
 document.addEventListener('DOMContentLoaded', () => {
   $('rogueInput').addEventListener('keydown', e => { if (e.key === 'Enter') { answered ? nextRogueFlag() : checkRogueAnswer(); } });
   $('ttInput').addEventListener('keydown', e => { if (e.key === 'Enter') { ttAnswered ? nextTimeTravelFlag() : checkTimeTravelAnswer(); } });
+  $('pseudoInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitPseudo(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') {
       if ($('timeTravelScreen').style.display !== 'none' && ttAnswered) { e.preventDefault(); nextTimeTravelFlag(); return; }
