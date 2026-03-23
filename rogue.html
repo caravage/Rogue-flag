@@ -130,6 +130,23 @@
     <h2 id="rogueEndTitle">Game Over</h2>
     <div class="rogue-end-score" id="rogueEndScore"></div>
     <p class="rogue-end-detail" id="rogueEndDetail"></p>
+
+    <!-- Pseudo input -->
+    <div class="pseudo-section" id="pseudoSection" style="display:none">
+      <div class="pseudo-label">Enregistrer votre score</div>
+      <div class="pseudo-row">
+        <input type="text" id="pseudoInput" placeholder="Votre pseudo..." maxlength="20" autocomplete="off">
+        <button id="pseudoSubmitBtn" onclick="submitPseudo()">OK</button>
+      </div>
+    </div>
+    <div class="pseudo-thanks" id="pseudoThanks" style="display:none">Score enregistré !</div>
+
+    <!-- Leaderboard -->
+    <div class="lb-section">
+      <div class="recap-title">Classement</div>
+      <div id="leaderboardContainer"></div>
+    </div>
+
     <div class="recap-title">Récapitulatif</div>
     <div class="recap-grid" id="rogueRecapGrid"></div>
     <button class="restart-btn" onclick="startRun()">Nouvelle run</button>
@@ -155,6 +172,7 @@
 <script src="data/countries.js"></script>
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
+<script src="js/leaderboard.js"></script>
 <script src="js/rogue.js"></script>
 </body>
 </html>
