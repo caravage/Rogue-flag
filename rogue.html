@@ -156,6 +156,7 @@
 
   <!-- GOD MODE PANEL -->
   <button class="god-mode-btn" onclick="toggleGodPanel()" title="God Mode">🔧</button>
+  <button class="lb-float-btn" onclick="toggleLbPanel()" title="Classement">🏆</button>
   <div class="god-panel" id="godPanel" style="display:none">
     <div class="god-panel-title">God Mode</div>
     <button class="god-panel-btn" onclick="godModeAddLife()">❤️ +1 Vie</button>
@@ -167,6 +168,10 @@
     <button class="god-panel-btn" onclick="godModeBoss('pixel')">📦 Pixelisé</button>
     <button class="god-panel-btn" onclick="godModeBoss('memory')">🧠 Mémoire</button>
     <button class="god-panel-btn" onclick="godModeBoss('historical')">📜 Historique</button>
+  </div>
+  <div class="lb-float-panel" id="lbPanel" style="display:none">
+    <div class="god-panel-title">Classement</div>
+    <div id="lbFloatContainer"></div>
   </div>
 </div>
 <script src="data/countries.js"></script>
