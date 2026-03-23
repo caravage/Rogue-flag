@@ -104,10 +104,20 @@
   background: var(--red);
 }
 
-/* ===== Inventory row ===== */
-.active-cards-row {
-  display: flex; justify-content: center; gap: 8px;
-  margin-bottom: 16px; min-height: 28px; flex-wrap: wrap;
+/* ===== Inventory section ===== */
+.inventory-section {
+  margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.inv-row {
+  display: flex; align-items: center; gap: 8px; min-height: 28px;
+}
+.inv-label {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-dim); font-weight: 500; min-width: 48px; flex-shrink: 0;
+}
+.inv-badges {
+  display: flex; gap: 6px; flex-wrap: wrap;
 }
 .inv-badge {
   border-radius: 20px; padding: 5px 12px; font-size: 0.82rem;
@@ -303,4 +313,18 @@
 .rogue-end .rogue-end-detail {
   color: var(--text-dim); font-weight: 300; margin-bottom: 24px;
   white-space: pre-line; font-size: 0.9rem;
+}
+
+/* ===== Recap act headers ===== */
+.recap-act-header {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.05rem; color: var(--accent);
+  padding: 12px 0 6px; margin-top: 8px;
+  border-bottom: 1px solid var(--card-border);
+  text-align: left;
+}
+.recap-boss-header {
+  font-size: 0.85rem; color: var(--red);
+  font-weight: 600; padding: 8px 0 4px;
+  text-align: left;
 }
